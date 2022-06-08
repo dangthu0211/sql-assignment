@@ -341,16 +341,61 @@ where student.gender = N'Nam'
     and (faculty.name = N'Anh - Văn' or faculty.name = N'Tin học');
 
 -- 3. Cho biết sinh viên nào có điểm thi lần 1 môn cơ sở dữ liệu cao nhất
-select student.* 
-from student join subject
-on 
+select * from student
+where student.id = (
+    select *
+    from (
+        select exam_management.student_id
+        from exam_management join subject 
+        on exam_management.subject_id = subject.id
+        where subject.name = N'Cơ sở dữ liệu' and exam_management.number_of_exam_taking = 1
+        order by mark desc
+        )
+    where rownum = 1
+    );
+    
 -- 4. Cho biết sinh viên khoa anh văn có tuổi lớn nhất.
+
+select student.*
+from student join faculty
+on student.faculty_id = faculty.id
+where faculty.name = N'Anh - Văn'
+    and extract(year from birthday) = 
+            (
+            select min(extract(year from birthday))
+            from student
+            );
 
 -- 5. Cho biết khoa nào có đông sinh viên nhất
 
+select * from faculty
+where faculty.id = (
+        select * from (
+            select faculty_id
+            from student
+            group by faculty_id
+            order by count(id) desc
+            )
+        where rownum = 1);
+
 -- 6. Cho biết khoa nào có đông nữ nhất
+select * from faculty
+where faculty.id = (
+        select * from (
+            select faculty.id
+            from faculty left join student
+            on faculty.id = student.faculty_id
+            group by faculty.id
+            order by count(case when gender = N'Nữ' then 1 end) desc
+            )
+        where rownum = 1);
 
 -- 7. Cho biết những sinh viên đạt điểm cao nhất trong từng môn
+
+select exam_management.subject_id, max(mark)
+from exam_management
+group by exam_management.subject_id;
+
 
 -- 8. Cho biết những khoa không có sinh viên học
 
